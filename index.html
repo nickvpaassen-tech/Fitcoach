@@ -78,7 +78,52 @@ x.r === undefined ||
 x.rpe === undefined
 );
 });
-}function saveTraining(){let m=validate();if(m.length){alert('Vul alle sets in voor: '+m.map(c=>EX[c][0]).join(', '));return false}let a=D.active||{id:Date.now(),name:WEEK[selDay][1],started:new Date().toISOString()};let rec={...a,date:new Date().toISOString(),duration:Math.max(1,Math.round((Date.now()-new Date(a.started))/60000)),completed:false,sets:structuredClone(D.sets)};let ix=D.sessions.findIndex(x=>x.id===a.id);ix<0?D.sessions.push(rec):D.sessions[ix]=rec;D.active={...rec,saved:true};save();trainStatus.textContent='Training opgeslagen. Rond af met het buikblok.';renderProgress();renderHome();return true}function finishTraining(){if(!D.active?.saved&&!saveTraining())return;remain=300;updateTimer();core.classList.add('show')}function toggleTimer(){running=!running;timerBtn.textContent=running?'Pauze':'Verder';if(running&&!tick)tick=setInterval(()=>{if(!running)return;remain--;updateTimer();if(remain<=0){clearInterval(tick);tick=null;running=false;let ix=D.sessions.findIndex(x=>x.id===D.active.id);if(ix>=0)D.sessions[ix].completed=true;D.active=null;save();core.classList.remove('show');renderProgress();renderHome();alert('Training inclusief buikblok voltooid.')}},1000)}function updateTimer(){timer.textContent=`${String(Math.floor(remain/60)).padStart(2,'0')}:${String(remain%60).padStart(2,'0')}`;coreName.textContent=coreSets[selDay%3][Math.floor((300-remain)/50)%6]}
+}function saveTraining(){let m=validate();if(m.length){alert('Vul alle sets in voor: '+m.map(c=>EX[c][0]).join(', '));return false}let a=D.active||{id:Date.now(),name:WEEK[selDay][1],started:new Date().toISOString()};let rec={...a,date:new Date().toISOString(),duration:Math.max(1,Math.round((Date.now()-new Date(a.started))/60000)),completed:false,sets:structuredClone(D.sets)};let ix=D.sessions.findIndex(x=>x.id===a.id);ix<0?D.sessions.push(rec):D.sessions[ix]=rec;D.active={...rec,saved:true};save();trainStatus.textContent='Training opgeslagen. Rond af met het buikblok.';renderProgress();renderHome();return true}function finishTraining(){if(!D.active?.saved&&!saveTraining())return;remain=300;updateTimer();core.classList.add('show')}function toggleTimer(){running=!running;timerBtn.textContent=running?'Pauze':'Verder';if(running&&!tick)tick=setInterval(()=>{if(!running)return;remain--;updateTimer();if(remain<=0){clearInterval(tick);tick=null;running=false;let ix=D.sessions.findIndex(x=>x.id===D.active.id);if(ix>=0)D.sessions[ix].completed=true;D.active=null;save();core.classList.remove('show');renderProgress();renderHome();alert('Training inclusief buikblok voltooid.')}},1000)}function updateTimer(){
+
+    timer.textContent =
+        `${String(Math.floor(remain/60)).padStart(2,'0')}:${String(remain%60).padStart(2,'0')}`;
+
+    let exercises = coreSets[selDay % coreSets.length];
+
+    let elapsed = 300 - remain;
+
+    let block = Math.floor(elapsed / 50);
+
+    let phase = elapsed % 50;
+
+    let currentExercise = exercises[Math.min(block, exercises.length - 1)];
+
+    let nextExercise =
+        exercises[Math.min(block + 1, exercises.length - 1)];
+
+    if (phase < 40) {
+
+        coreName.innerHTML =
+        `
+        <h3>${currentExercise}</h3>
+        <p style="color:#c8ff70;font-weight:bold">
+            Nu: 40 seconden werken
+        </p>
+        <p class="muted">
+            Hierna: Rust 10 seconden
+        </p>
+        `;
+
+    } else {
+
+        coreName.innerHTML =
+        `
+        <h3>Rust</h3>
+        <p style="color:#c8ff70;font-weight:bold">
+            Nu: 10 seconden rust
+        </p>
+        <p class="muted">
+            Hierna: ${nextExercise}
+            (40 seconden)
+        </p>
+        `;
+    }
+}
 function renderDB(){let q=(dbSearch.value||'').toLowerCase();dbList.innerHTML=Object.keys(EX).filter(c=>(EX[c][0]+' '+EX[c][1]).toLowerCase().includes(q)).sort((a,b)=>EX[a][0].localeCompare(EX[b][0],'nl')).map(c=>{let e=EX[c];return `<div class="card day" onclick="dbOpen('${c}')"><div class="illus"><img src="${IMG[c]}"></div><div class="grow"><h3>${e[0]}</h3><div class="muted">${e[1]}</div><b>${e[2]} × ${e[3]}</b> · ${weight(c,e)} kg</div><span class="tag">Open</span></div>`}).join('')}function dbOpen(c){let e=EX[c];modalBody.innerHTML=`<div class="illus" style="height:240px"><img src="${IMG[c]}"></div><h2>${e[0]}</h2><p><b>Spiergroep:</b> ${e[1]}</p><p><b>Sets/reps:</b> ${e[2]} × ${e[3]}</p><p><b>Voorgesteld gewicht:</b> ${weight(c,e)} kg</p><a class="btn" style="display:inline-block;text-decoration:none" href="${e[5]}" target="_blank" rel="noopener">Bekijk uitleg</a>`;modal.classList.add('show')}
 function mealDate(){let d=new Date(),t=(d.getDay()+6)%7;d.setDate(d.getDate()-t+mealDay);return d}function mealKey(){return mealDate().toISOString().slice(0,10)}function renderMeals(){mealBtns.innerHTML=['Ma','Di','Wo','Do','Vr','Za','Zo'].map((x,i)=>`<button class="btn ${i===mealDay?'':'secondary'}" onclick="mealDay=${i};renderMeals()">${x}</button>`).join('');mealDate.textContent=mealDate().toLocaleDateString('nl-NL',{weekday:'long',day:'numeric',month:'long'});let done=D.meals[mealKey()]||{},kc0=0,pr0=0;mealList.innerHTML=MEALS[mealDay].map((m,i)=>{if(done[i]){kc0+=m[2];pr0+=m[3]}return `<div class="card"><h3>${m[0]}</h3><p>${m[1]}</p><b>${m[2]} kcal · ${m[3]} g eiwit</b><button class="btn ${done[i]?'secondary':''}" style="float:right" onclick="toggleMeal(${i})">${done[i]?'✓ Gegeten':'Afvinken'}</button></div>`}).join('');kc.textContent=kc0;pr.textContent=pr0+' g';foodbar.style.width=Math.min(100,kc0/2650*100)+'%'}function toggleMeal(i){let k=mealKey();D.meals[k]=D.meals[k]||{};D.meals[k][i]=!D.meals[k][i];save();renderMeals()}function weekMenu(){modalBody.innerHTML='<h2>Volledig weekmenu</h2>'+MEALS.map((p,i)=>`<div class="card"><h3>${DAYS[i]}</h3>${p.map(x=>`<p><b>${x[0]}:</b> ${x[1]} <span class="muted">${x[2]} kcal · ${x[3]} g</span></p>`).join('')}</div>`).join('');modal.classList.add('show')}function groceries(){let g={'Zuivel & eiwit':['4 kg kwark of yoghurt','7 porties Skyr','Whey voor 5 shakes','6 eieren','2 verpakkingen hüttenkäse'],'Vlees / vis / vegetarisch':['1,8 kg kipfilet','500 g zalm','500 g mager gehakt','400 g kalkoen','300 g biefstuk','2 blikken tonijn','bonen en linzen'],'Groente':['broccoli','paprika','komkommer','sla en rauwkost','sperziebonen','roerbakgroente','tomaten','mais'],'Fruit':['bananen','appels','blauwe bessen','aardbeien','kiwi','ananas','frambozen','rood fruit'],'Koolhydraten':['havermout','volkoren wraps','brood en bollen','rijst','pasta','aardappelen','zoete aardappel','couscous','noodles','rijstwafels'],'Overig':['noten','hummus','avocado','pindakaas','muesli of granola','honing','tzatziki','kaneel']};modalBody.innerHTML='<h2>Boodschappenlijst voor 7 dagen</h2>'+Object.entries(g).map(([k,a])=>`<div class="card"><h3>${k}</h3>${a.map(x=>`<label style="display:block;padding:5px"><input type="checkbox"> ${x}</label>`).join('')}</div>`).join('');modal.classList.add('show')}
 mw.oninput=()=>mb.value=mw.value?(mw.value/(1.75*1.75)).toFixed(1):'';function saveMeasure(){if(!mw.value||!mf.value||!ms.value)return alert('Vul gewicht, vet % en SMM in.');D.measures.push({date:new Date().toISOString().slice(0,10),weight:+mw.value,fat:+mf.value,smm:+ms.value,bmi:+mb.value});save();mw.value=mf.value=ms.value=mb.value='';renderProgress();renderHome()}function renderProgress(){let l=D.measures.at(-1);latest.innerHTML=`<div class="metric"><b>${l.weight}</b>kg</div><div class="metric"><b>${l.fat}%</b>vet</div><div class="metric"><b>${l.smm}</b>SMM</div><div class="metric"><b>${l.bmi}</b>BMI</div>`;measureHist.innerHTML=D.measures.slice().reverse().map(x=>`<div class="card"><b>${new Date(x.date+'T12:00').toLocaleDateString('nl-NL')}</b><div class="muted">${x.weight} kg · ${x.fat}% vet · ${x.smm} SMM · BMI ${x.bmi}</div></div>`).join('');sessionHist.innerHTML=D.sessions.slice().reverse().map(x=>`<div class="card"><b>${new Date(x.date).toLocaleDateString('nl-NL')} · ${x.name}</b><div class="muted">${x.duration} min · ${x.completed?'Voltooid inclusief buik':'Opgeslagen'}</div></div>`).join('')||'<p class="muted">Nog geen trainingen opgeslagen.</p>'}function renderHome(){let i=Math.max(0,new Date().getDay()-1),d=WEEK[i],l=D.measures.at(-1);dw.textContent=l.weight;ds.textContent=l.smm;df.textContent=l.fat+'%';dt.textContent=D.sessions.filter(x=>x.completed&&weekKey(new Date(x.date))===weekKey(new Date())).length;today.innerHTML=`<h3>${d[0]} · ${d[1]}</h3><p class="muted">${d[2].map(c=>EX[c][0]).join(' · ')||'Rust'}</p><button class="btn" onclick="openDay(${i})">Bekijk training</button>`;let ni=(i+1)%7;if(ni===6)ni=0;next.innerHTML=`<b>${WEEK[ni][0]} · ${WEEK[ni][1]}</b><div class="muted">${WEEK[ni][2].length} oefeningen</div>`}

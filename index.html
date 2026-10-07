@@ -46,7 +46,19 @@ coreSets[i % coreSets.length]
 40 seconden werken · 10 seconden rust
 </p>
 </div>`
-: '')'')+(n===D.programWeek&&d[2].length?`<button class="btn" onclick="${i})">Start training</button>`:'');show('day')}function startDay(i){selDay=i;let d=WEEK[i];D.active={id:Date.now(),day:i,name:d[1],started:new Date().toISOString(),saved:false};save();trainTitle.textContent=d[0]+' · '+d[1];trainList.innerHTML=d[2].map(c=>card(c,true)).join('')+`<div class="card"><b>Daarna: 5 minuten buik</b></div>`;show('training')}function validate(){
+: '')'')+(n===D.programWeek&&d[2].length?`<button class="btn" onclick="${i})">Start training</button>`:'');show('day')}function startDay(i){selDay=i;let d=WEEK[i];D.active={id:Date.now(),day:i,name:d[1],started:new Date().toISOString(),saved:false};save();trainTitle.textContent=d[0]+' · '+d[1];trainList.innerHTML=d[2].map(c=>card(c,true)).join('')+ `<div class="card">
+<h3>Daarna: 5 minuten buikspieren</h3>
+<ul style="margin:10px 0;padding-left:20px">
+${
+coreSets[i % coreSets.length]
+.map(ex => `<li>${ex}</li>`)
+.join('')
+}
+</ul>
+<p class="muted">
+40 seconden werken · 10 seconden rust
+</p>
+</div>`;show('training')}function validate(){
 return WEEK[selDay][2].filter(c=>{
 let e = EX[c];
 let a = D.sets[c] || [];
